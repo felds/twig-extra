@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Felds\TwigExtra;
 
 use Twig\Compiler;
-use Twig\Extension\CoreExtension;
 use Twig\Extension\SandboxExtension;
 use Twig\Node\Expression\AbstractExpression;
 use Twig\Node\Expression\ArrayExpression;
@@ -26,7 +25,7 @@ class NullsafeGetAttrExpression extends AbstractExpression implements SupportDef
         }
 
         if ($arguments && !$arguments instanceof ArrayExpression) {
-            trigger_deprecation('felds/twig-extra', '1.0', sprintf('Not passing a %s as arguments is deprecated.', ArrayExpression::class));
+            trigger_deprecation('felds/twig-extra', '1.0', \sprintf('Not passing a %s as arguments is deprecated.', ArrayExpression::class));
         }
 
         parent::__construct($nodes, ['type' => $type, 'ignore_strict_check' => false], $lineno);

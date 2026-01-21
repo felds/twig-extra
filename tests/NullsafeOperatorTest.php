@@ -12,64 +12,71 @@ use Twig\TwigFunction;
 
 class NullsafeOperatorTest extends TestCase
 {
-    private Environment $twig;
-    private ArrayLoader $loader;
+	private Environment $twig;
+	private ArrayLoader $loader;
 
-    protected function setUp(): void
-    {
-        $this->loader = new ArrayLoader();
-        $this->twig = new Environment($this->loader, ['strict_variables' => true]);
-        $this->twig->addExtension(new NullsafeExtension());
-    }
+	protected function setUp(): void
+	{
+		$this->loader = new ArrayLoader();
+		$this->twig = new Environment($this->loader, ['strict_variables' => true]);
+		$this->twig->addExtension(new NullsafeExtension());
+	}
 
-    public function testReturnsValueWhenPresent(): void
-    {
-        $this->assertSame('Ada', $this->render('{{ user?.name }}', ['user' => ['name' => 'Ada']]));
+	public function testDateFormatting(): void
+	{
+		$tpl = '{{ date?.format("d/m/Y") ?? "no date" }}';
+		$this->assertSame('01/02/2013', $this->render($tpl, ['date' => new \DateTimeImmutable("2013-02-01")]));
+		$this->assertSame('no date', $this->render($tpl, ['date' => null]));
+	}
 
-        $user = new class {
-            public string $name = 'Ada';
-        };
+	public function testReturnsValueWhenPresent(): void
+	{
+		$this->assertSame('Ada', $this->render('{{ user?.name }}', ['user' => ['name' => 'Ada']]));
 
-        $this->assertSame('Ada', $this->render('{{ user?.name }}', ['user' => $user]));
-    }
+		$user = new class {
+			public string $name = 'Ada';
+		};
 
-    public function testGracefullyHandlesNullOrMissing(): void
-    {
-        $this->assertSame('', $this->render('{{ user?.name }}', ['user' => null]));
-        $this->assertSame('', $this->render('{{ profile?.name }}', []));
-    }
+		$this->assertSame('Ada', $this->render('{{ user?.name }}', ['user' => $user]));
+	}
 
-    public function testShortCircuitsAcrossChain(): void
-    {
-        $template = '{{ post?.author?.getName() }}';
-        $this->assertSame('', $this->render($template, ['post' => ['author' => null]]));
+	public function testGracefullyHandlesNullOrMissing(): void
+	{
+		$this->assertSame('', $this->render('{{ user?.name }}', ['user' => null]));
+		$this->assertSame('', $this->render('{{ profile?.name }}', []));
+	}
 
-        $author = new class {
-            public function getName(): string
-            {
-                return 'Grace';
-            }
-        };
+	public function testShortCircuitsAcrossChain(): void
+	{
+		$template = '{{ post?.author?.getName() }}';
+		$this->assertSame('', $this->render($template, ['post' => ['author' => null]]));
 
-        $this->assertSame('Grace', $this->render($template, ['post' => ['author' => $author]]));
-    }
+		$author = new class {
+			public function getName(): string
+			{
+				return 'Grace';
+			}
+		};
 
-    public function testEvaluatesLeftSideOnce(): void
-    {
-        $calls = 0;
-        $this->twig->addFunction(new TwigFunction('makeUser', function () use (&$calls) {
-            $calls++;
-            return null;
-        }));
+		$this->assertSame('Grace', $this->render($template, ['post' => ['author' => $author]]));
+	}
 
-        $this->render('{{ makeUser()?.name }}', []);
+	public function testEvaluatesLeftSideOnce(): void
+	{
+		$calls = 0;
+		$this->twig->addFunction(new TwigFunction('makeUser', function () use (&$calls) {
+			$calls++;
+			return null;
+		}));
 
-        $this->assertSame(1, $calls);
-    }
+		$this->render('{{ makeUser()?.name }}', []);
 
-    private function render(string $template, array $context): string
-    {
-        $this->loader->setTemplate('tpl', $template);
-        return $this->twig->render('tpl', $context);
-    }
+		$this->assertSame(1, $calls);
+	}
+
+	private function render(string $template, array $context): string
+	{
+		$this->loader->setTemplate('tpl', $template);
+		return $this->twig->render('tpl', $context);
+	}
 }
