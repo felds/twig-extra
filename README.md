@@ -69,3 +69,7 @@ composer install
 ## License
 
 MIT
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
