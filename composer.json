@@ -3,6 +3,7 @@
     "description": "Custom Twig tags and extensions (switch tag).",
     "type": "library",
     "license": "MIT",
+    "version": "1.0.0",
     "require": {
         "php": ">=8.4",
         "twig/twig": "^3.22"
